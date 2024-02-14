@@ -1,4 +1,4 @@
-import http from "http"
+/*import http from "http"
 import { percentLove } from "./features.js";
 import fs from "fs"//with the help of fs we can read any file
 import path from "path"
@@ -50,4 +50,47 @@ const server = http.createServer((req, res) => {
 
 server.listen(5000, () => {
       console.log("Server is working");
+})*/
+
+//Use of express Now
+
+import express from "express";
+import fs from "fs";
+import path from "path";
+
+const app = express();
+
+app.use(express.static(path.join(path.resolve(), "public")));
+
+//setting up view engine
+app.set("view engine", "ejs");
+
+app.get("/", (req, res) => {
+      //res.send("Hi")
+      //res.statusCode = 404;
+      //res.sendStatus(404);
+      // res.json({
+      //       success: true,
+      //       products: []
+      // })
+
+      // res.status(400).send("Meri marzi");
+      
+      //to find current directory
+      //console.log(path.resolve());
+
+      //const pathlocation = path.resolve();
+      //console.log(path.join(pathlocation, "./index.html"));
+      //res.sendFile(path.join(pathlocation, "./index.html"));
+      // res.sendFile("./index.html");
+
+      //res.render("index", {name: "Ashmit"});
+
+      //res.sendFile("index.html");
+      res.sendFile("index");
 })
+
+app.listen(5000, () => {
+      console.log("Server is live now");
+})
+
