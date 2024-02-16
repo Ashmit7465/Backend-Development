@@ -87,10 +87,10 @@ app.get("/", (req, res) => {
       //res.render("index", {name: "Ashmit"});
 
       //res.sendFile("index.html");
-      res.sendFile("index");
-})
+      res.render("index", {name: "Ashmit"});
+});
 
 app.listen(5000, () => {
       console.log("Server is live now");
-})
+});
 
