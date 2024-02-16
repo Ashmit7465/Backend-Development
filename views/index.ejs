@@ -3,12 +3,18 @@
 <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Document</title>
+      <title>FORM</title>
       <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-      <h1>Home</h1>
-      <p>Hello and welcome <% locals.nambo %></p>
+     <main>
+      <form method="post" action="/">
+            <h1>Contact Now</h1>
+            <input type="text" name="name" placeholder="Name"/>
+            <input type="email" name="email" placeholder="E-mail"/>
+            <button type="submit">Send Message</button>
+      </form>
+     </main> 
 </body>
 <script src="script.js"></script>
 </html>
