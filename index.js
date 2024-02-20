@@ -57,6 +57,20 @@ server.listen(5000, () => {
 import express from "express";
 import fs from "fs";
 import path from "path";
+import mongoose from "mongoose";
+
+mongoose.connect("mongodb://localhost:27017", {
+      dbName: "backend",
+})
+.then(() => console.log("Database Connected Successfully"))
+.catch((err) => console.log(err));
+
+const messageSchema = new mongoose.Schema({
+      name: String,
+      email: String,
+});
+
+const Message = mongoose.model("Message", messageSchema);
 
 const app = express();
 
@@ -92,6 +106,11 @@ app.get("/", (req, res) => {
 
       //res.sendFile("index.html");
       res.render("index", {name: "Ashmit"});
+});
+
+app.get("/add", async(req, res) => {
+      await Message.create({name: "James", email: "james34@gmail.com"})
+      res.send("<h1>Nice</h1>");
 });
 
 app.get("/success", (req, res) => {
