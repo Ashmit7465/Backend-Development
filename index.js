@@ -74,7 +74,7 @@ const Message = mongoose.model("Message", messageSchema);
 
 const app = express();
 
-const users = [];
+// const users = [];
 
 app.use(express.static(path.join(path.resolve(), "public")));
 //using middlewares 
@@ -117,12 +117,21 @@ app.get("/success", (req, res) => {
       res.render("success");
 })
 
-app.post("/", (req, res) => {
-      console.log(req.body);
+app.post("/contact", async (req, res) => {
+      // console.log(req.body);
 
       //further database ke actions kar sakte hai
 
-      users.push({username: req.body.name, email: req.body.email});
+      // const messageData = {
+      //       username: req.body.name,
+      //       email: req.body.email
+      // };
+
+      // console.log(messageData);
+
+      // const {name, email} = req.body;
+
+      await Message.create({name: req.body.name, email: req.body.email});
 
       //res.redirect
       //res.render("success");
