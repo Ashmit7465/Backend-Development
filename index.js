@@ -58,6 +58,10 @@ import express from "express";
 import fs from "fs";
 import path from "path";
 import mongoose from "mongoose";
+import cookieParser from "cookie-parser";
+import jwt from "jsonwebtoken"
+
+
 
 mongoose.connect("mongodb://localhost:27017", {
       dbName: "backend",
@@ -65,12 +69,12 @@ mongoose.connect("mongodb://localhost:27017", {
 .then(() => console.log("Database Connected Successfully"))
 .catch((err) => console.log(err));
 
-const messageSchema = new mongoose.Schema({
+const userSchema = new mongoose.Schema({
       name: String,
       email: String,
 });
 
-const Message = mongoose.model("Message", messageSchema);
+const User = mongoose.model("User", userSchema);
 
 const app = express();
 
@@ -79,11 +83,33 @@ const app = express();
 app.use(express.static(path.join(path.resolve(), "public")));
 //using middlewares 
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 //setting up view engine
 app.set("view engine", "ejs");
 
-app.get("/", (req, res) => {
+const isAuthenticated = (req, res, next) => {
+      const {token} = req.cookies;
+      if(token)
+      {
+           const decodedToken = jwt.verify(token, "ghsduihwfiubweigv");
+
+           console.log(decodedToken);
+
+           next();
+      }
+      else
+      {
+            res.render("login");
+      }
+}
+
+app.get("/", isAuthenticated, (req, res) => {
+
+      // console.log(req.cookies);
+
+      res.render("logout");
+
       //res.send("Hi")
       //res.statusCode = 404;
       //res.sendStatus(404);
@@ -105,45 +131,70 @@ app.get("/", (req, res) => {
       //res.render("index", {name: "Ashmit"});
 
       //res.sendFile("index.html");
-      res.render("index", {name: "Ashmit"});
 });
+
+app.post("/login", async (req, res) => {
+
+      //console.log(req.body);
+
+      const user = await User.create({name: req.body.name, email: req.body.email});
+
+      const token = jwt.sign({_id: user._id}, "ghsduihwfiubweigv");
+
+      //console.log(token);
+
+      res.cookie("token", token,{ httpOnly:true, expires: new Date(Date.now() + 60*1000)});
+      res.redirect("/");
+});
+
+app.get("/logout", (req, res) => {
+      res.cookie("token", null, {
+            httpOnly: true,
+            expires: new Date(Date.now())
+      });
+      res.redirect("/");
+})
 
 app.get("/add", async(req, res) => {
       await Message.create({name: "James", email: "james34@gmail.com"})
       res.send("<h1>Nice</h1>");
 });
 
-app.get("/success", (req, res) => {
-      res.render("success");
-})
+// app.get("/success", (req, res) => {
+//       res.render("success");
+// })
 
-app.post("/contact", async (req, res) => {
-      // console.log(req.body);
+// app.post("/contact", async (req, res) => {
+//       // console.log(req.body);
 
-      //further database ke actions kar sakte hai
+//       //further database ke actions kar sakte hai
 
-      // const messageData = {
-      //       username: req.body.name,
-      //       email: req.body.email
-      // };
+//       // const messageData = {
+//       //       username: req.body.name,
+//       //       email: req.body.email
+//       // };
 
-      // console.log(messageData);
+//       // console.log(messageData);
 
-      // const {name, email} = req.body;
+//       // const {name, email} = req.body;
 
-      await Message.create({name: req.body.name, email: req.body.email});
+//       await Message.create({name: req.body.name, email: req.body.email});
 
-      //res.redirect
-      //res.render("success");
+//       //res.redirect
+//       //res.render("success");
 
-      res.redirect("./success");
-})
+//       res.redirect("./success");
+// })
 
-app.get("/users", (req, res) => {
-      res.json({
-            users,
-      })
-})
+
+
+// app.get("/users", (req, res) => {
+//       res.json({
+//             users,
+//       })
+// })
+
+
 
 app.listen(5000, () => {
       console.log("Server is live now");
