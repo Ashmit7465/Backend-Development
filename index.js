@@ -60,6 +60,7 @@ import path from "path";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser";
 import jwt from "jsonwebtoken"
+import bcrypt from "bcrypt"
 
 
 
@@ -72,6 +73,7 @@ mongoose.connect("mongodb://localhost:27017", {
 const userSchema = new mongoose.Schema({
       name: String,
       email: String,
+      password: String,
 });
 
 const User = mongoose.model("User", userSchema);
@@ -88,27 +90,29 @@ app.use(cookieParser());
 //setting up view engine
 app.set("view engine", "ejs");
 
-const isAuthenticated = (req, res, next) => {
+const isAuthenticated = async (req, res, next) => {
       const {token} = req.cookies;
       if(token)
       {
            const decodedToken = jwt.verify(token, "ghsduihwfiubweigv");
 
-           console.log(decodedToken);
+           //console.log(decodedToken);
+
+           req.user = await User.findById(decodedToken._id);
 
            next();
       }
       else
       {
-            res.render("login");
+            res.redirect("/login");
       }
 }
 
 app.get("/", isAuthenticated, (req, res) => {
 
       // console.log(req.cookies);
-
-      res.render("logout");
+      console.log(req.user);
+      res.render("logout", { name: req.user.name});
 
       //res.send("Hi")
       //res.statusCode = 404;
@@ -133,19 +137,88 @@ app.get("/", isAuthenticated, (req, res) => {
       //res.sendFile("index.html");
 });
 
+app.get("/register", (req, res) => {
+      res.render("register");
+});
+
+// app.post("/login", async (req, res) => {
+
+//       const {email, password} = req.body;
+
+//       let user = await User.findOne({email});
+
+//       if(!user)
+//       {
+//             return res.redirect("/register");
+//       }
+// });
 app.post("/login", async (req, res) => {
 
       //console.log(req.body);
+      const { email, password } = req.body;
 
-      const user = await User.create({name: req.body.name, email: req.body.email});
+      let user = await User.findOne({email});
+
+      if(!user)
+      {
+            // return console.log("Register First");
+
+            return res.redirect("/register");
+      }
+
+      const isMatch = await bcrypt.compare(password, user.password);
+
+      if(!isMatch)
+      {
+            return res.render("login", {email, message: "Incorrect Password"});
+      }
+
+      
+
+      // const user = await User.create({name: req.body.name, email: req.body.email});
+
+      // user = await User.create({
+      //       name, email,
+      // });
 
       const token = jwt.sign({_id: user._id}, "ghsduihwfiubweigv");
 
       //console.log(token);
 
-      res.cookie("token", token,{ httpOnly:true, expires: new Date(Date.now() + 60*1000)});
+      res.cookie("token", token, { httpOnly:true, expires: new Date(Date.now() + 60 * 1000)
+      });
       res.redirect("/");
 });
+
+app.get("/login", (req, res) => {
+      res.render("login");
+})
+
+app.post("/register", async (req, res) => {
+      const {name, email, password} = req.body;
+
+      let user = await User.findOne({email});
+      if(user)
+      {
+            return res.redirect("/login");
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      user = await User.create({
+            name, 
+            email,
+            password: hashedPassword,
+      });
+
+      const token = jwt.sign({_id: user._id}, "ghsduihwfiubweigv");
+
+      res.cookie("token", token, {
+            httpOnly: true,
+            expires: new Date(Date.now() + 60 * 1000),
+      });
+      res.redirect("/");
+})
 
 app.get("/logout", (req, res) => {
       res.cookie("token", null, {
@@ -155,10 +228,10 @@ app.get("/logout", (req, res) => {
       res.redirect("/");
 })
 
-app.get("/add", async(req, res) => {
-      await Message.create({name: "James", email: "james34@gmail.com"})
-      res.send("<h1>Nice</h1>");
-});
+// app.get("/add", async(req, res) => {
+//       await Message.create({name: "James", email: "james34@gmail.com"})
+//       res.send("<h1>Nice</h1>");
+// });
 
 // app.get("/success", (req, res) => {
 //       res.render("success");
@@ -199,4 +272,3 @@ app.get("/add", async(req, res) => {
 app.listen(5000, () => {
       console.log("Server is live now");
 });
-
